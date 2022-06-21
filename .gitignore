@@ -1,0 +1,10 @@
+#several archives and folders from STM Cube
+.cproject
+.mxproject
+.project
+.settings/
+*.ld
+*.launch
+
+#All build files
+Debug/
