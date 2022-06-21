@@ -20,7 +20,7 @@
 #define es8311_delay(x) HAL_Delay(x)
 #define CONFIG_USE_ES8311_A0_HIGH 0
 
-#define BUFFER_LENGHT	2048
+#define BUFFER_LENGHT	320
 /**
  * Esta configuracion depende del pin correspondiente. El circuito basico trae el pin A0 --> GND
  * por lo que se usa la direccion 0x18 mayormente

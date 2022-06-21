@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "es8311.h"
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -44,10 +45,14 @@
  I2C_HandleTypeDef hi2c2;
 
 I2S_HandleTypeDef hi2s2;
+DMA_HandleTypeDef hdma_spi2_tx;
+DMA_HandleTypeDef hdma_i2s2_ext_rx;
 
 /* USER CODE BEGIN PV */
 uint16_t buffer_Tx[BUFFER_LENGHT];
 uint16_t buffer_Rx[BUFFER_LENGHT];
+uint16_t* pingPong_pointer;
+bool changeBuffer = false;
 
 const uint16_t sine1k_8ksps[] = {32767,55938,65535,55938,32768,9597,0,9597,32767,55938,65535,55938,32768,9597,0,
 							9597,32767,55938,65535,55938,32768,9597,0,9597,32767,55938,65535,55938,32768,9597,
@@ -67,6 +72,7 @@ const uint16_t sine1k_8ksps[] = {32767,55938,65535,55938,32768,9597,0,9597,32767
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_I2C2_Init(void);
+static void MX_DMA_Init(void);
 static void MX_I2S2_Init(void);
 /* USER CODE BEGIN PFP */
 
@@ -74,6 +80,29 @@ static void MX_I2S2_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+void HAL_I2SEx_TxRxHalfCpltCallback(I2S_HandleTypeDef *hi2s)  {
+
+	/**
+	 * Esta interrupcion se da cuando se llega a BUFFER_SIZE/2
+	 * Asi que cambiamos el puntero de envio a la primer mitad.
+	 * Se supone que la segunda mitad ya tiene datos
+	 */
+	pingPong_pointer = buffer_Tx;
+	changeBuffer = true;
+
+}
+
+void HAL_I2SEx_TxRxCpltCallback(I2S_HandleTypeDef *hi2s)  {
+
+	/**
+	 * Esta interrupcion se da cuando se llega a BUFFER_SIZE
+	 * Asi que cambiamos el puntero de envio a la segunda mitad.
+	 * Se supone que la segunda mitad ya tiene datos
+	 */
+	pingPong_pointer = buffer_Tx + (BUFFER_LENGHT / 2);		//segunda mitad
+	changeBuffer = true;
+}
 
 /* USER CODE END 0 */
 
@@ -108,12 +137,22 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_I2C2_Init();
+  MX_DMA_Init();
   MX_I2S2_Init();
   /* USER CODE BEGIN 2 */
 
   ES8311_init(SAMPLING_8K);
+  /**
+   * Primera posicion del ping pong buffer
+   */
+  pingPong_pointer = buffer_Tx;
 
-  //ES8311_mic_loop(buffer_Tx, buffer_Rx);
+  bzero(buffer_Tx,BUFFER_LENGHT);
+  bzero(buffer_Rx,BUFFER_LENGHT);
+
+  HAL_I2SEx_TransmitReceive_DMA(&hi2s2, buffer_Tx, buffer_Rx, BUFFER_LENGHT);
+
+
 
   /* USER CODE END 2 */
 
@@ -121,13 +160,12 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  ret = HAL_I2S_Transmit(&hi2s2, sine1k_8ksps, SAMPLES_QTY, 10);
-
-	 // HAL_Delay(1);
-
-	  if(ret == HAL_ERROR)  {
-		  //HAL_I2SEx_TransmitReceive(&hi2s2, sine1k_8ksps, buffer_Rx, SAMPLES_QTY, 30);
-		  ret = 0;
+	  if(changeBuffer)  {
+		  /**
+		   * Copiar el siguiente tramo de onda al buffer de salida
+		   */
+		  memcpy(pingPong_pointer,sine1k_8ksps,(sizeof(uint16_t) * BUFFER_LENGHT/2));
+		  changeBuffer = false;
 	  }
 
     /* USER CODE END WHILE */
@@ -261,6 +299,25 @@ static void MX_I2S2_Init(void)
   /* USER CODE BEGIN I2S2_Init 2 */
 
   /* USER CODE END I2S2_Init 2 */
+
+}
+
+/**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Stream3_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream3_IRQn);
+  /* DMA1_Stream4_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream4_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream4_IRQn);
 
 }
 
