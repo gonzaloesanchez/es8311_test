@@ -20,7 +20,7 @@
 #define es8311_delay(x) HAL_Delay(x)
 #define CONFIG_USE_ES8311_A0_HIGH 0
 
-#define BUFFER_LENGHT	320
+#define BUFFER_LENGHT	128
 /**
  * Esta configuracion depende del pin correspondiente. El circuito basico trae el pin A0 --> GND
  * por lo que se usa la direccion 0x18 mayormente
@@ -177,6 +177,20 @@
 
 #define LINSEL					0x10		//<---- Value for Mic1p-1n select
 
+#define PGAGAIN_0DB				0x00
+#define PGAGAIN_3DB				0x01
+#define PGAGAIN_6DB				0x02
+#define PGAGAIN_9DB				0x03
+#define PGAGAIN_12DB			0x04
+#define PGAGAIN_15DB			0x05
+#define PGAGAIN_18DB			0x06
+#define PGAGAIN_21DB			0x07
+#define PGAGAIN_24DB			0x08
+#define PGAGAIN_27DB			0x09
+#define PGAGAIN_30DB			0x0A
+
+
+/*
 enum PGAGAIN {
 								PGAGAIN_0DB = 0,	//<--- Values for several MIC PGA gains
 								PGAGAIN_3DB,
@@ -189,7 +203,7 @@ enum PGAGAIN {
 								PGAGAIN_24DB,
 								PGAGAIN_27DB,
 								PGAGAIN_30DB,
-};
+};*/
 
 //------------------------- ADC REG 0x1C -------------------------------------
 

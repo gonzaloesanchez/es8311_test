@@ -51,20 +51,9 @@ DMA_HandleTypeDef hdma_i2s2_ext_rx;
 /* USER CODE BEGIN PV */
 uint16_t buffer_Tx[BUFFER_LENGHT];
 uint16_t buffer_Rx[BUFFER_LENGHT];
-uint16_t* pingPong_pointer;
+uint16_t *pingPong_Tx;
+uint16_t *pingPong_Rx;
 bool changeBuffer = false;
-
-const uint16_t sine1k_8ksps[] = {32767,55938,65535,55938,32768,9597,0,9597,32767,55938,65535,55938,32768,9597,0,
-							9597,32767,55938,65535,55938,32768,9597,0,9597,32767,55938,65535,55938,32768,9597,
-							0,9597,32767,55938,65535,55938,32768,9597,0,9597,32767,55938,65535,55938,32768,9597,
-							0,9597,32767,55938,65535,55938,32767,9597,0,9597,32767,55938,65535,55938,32768,9597,
-							0,9597,32767,55938,65535,55938,32767,9597,0,9597,32767,55938,65535,55938,32768,9597,
-							0,9597,32767,55938,65535,55938,32767,9597,0,9597,32767,55938,65535,55938,32768,9597,
-							0,9597,32767,55938,65535,55938,32767,9597,0,9597,32768,55938,65535,55938,32768,9597,
-							0,9597,32767,55938,65535,55938,32768,9597,0,9597,32767,55938,65535,55938,32768,9597,
-							0,9597,32767,55938,65535,55938,32768,9597,0,9597,32768,55938,65535,55938,32768,9597,
-							0,9597,32767,55938,65535,55938,32768,9597,0,9597,32767,55938,65535,55938,32768,9597,
-							0,9597};	//160 muestras = 20ms
 
 /* USER CODE END PV */
 
@@ -88,7 +77,8 @@ void HAL_I2SEx_TxRxHalfCpltCallback(I2S_HandleTypeDef *hi2s)  {
 	 * Asi que cambiamos el puntero de envio a la primer mitad.
 	 * Se supone que la segunda mitad ya tiene datos
 	 */
-	pingPong_pointer = buffer_Tx;
+	pingPong_Tx = buffer_Tx;
+	pingPong_Rx = buffer_Rx;
 	changeBuffer = true;
 
 }
@@ -100,7 +90,8 @@ void HAL_I2SEx_TxRxCpltCallback(I2S_HandleTypeDef *hi2s)  {
 	 * Asi que cambiamos el puntero de envio a la segunda mitad.
 	 * Se supone que la segunda mitad ya tiene datos
 	 */
-	pingPong_pointer = buffer_Tx + (BUFFER_LENGHT / 2);		//segunda mitad
+	pingPong_Tx = buffer_Tx + (BUFFER_LENGHT / 2);		//segunda mitad
+	pingPong_Rx = buffer_Rx + (BUFFER_LENGHT / 2);		//segunda mitad
 	changeBuffer = true;
 }
 
@@ -113,8 +104,6 @@ void HAL_I2SEx_TxRxCpltCallback(I2S_HandleTypeDef *hi2s)  {
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
-	volatile HAL_StatusTypeDef ret;
 
   /* USER CODE END 1 */
 
@@ -141,11 +130,13 @@ int main(void)
   MX_I2S2_Init();
   /* USER CODE BEGIN 2 */
 
-  ES8311_init(SAMPLING_8K);
+  if(!ES8311_init(SAMPLING_22K))
+	  while(1);
   /**
    * Primera posicion del ping pong buffer
    */
-  pingPong_pointer = buffer_Tx;
+  pingPong_Tx = buffer_Tx;
+  pingPong_Rx = buffer_Rx;
 
   bzero(buffer_Tx,BUFFER_LENGHT);
   bzero(buffer_Rx,BUFFER_LENGHT);
@@ -164,7 +155,7 @@ int main(void)
 		  /**
 		   * Copiar el siguiente tramo de onda al buffer de salida
 		   */
-		  memcpy(pingPong_pointer,sine1k_8ksps,(sizeof(uint16_t) * BUFFER_LENGHT/2));
+		  memcpy(pingPong_Tx,pingPong_Rx,(sizeof(uint16_t) * BUFFER_LENGHT/2));
 		  changeBuffer = false;
 	  }
 

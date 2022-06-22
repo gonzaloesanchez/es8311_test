@@ -103,13 +103,13 @@ bool ES8311_init(sampling_options_t sampling)
 	if(!ES8311_I2C_write(ES8311_DAC_REG37, DAC_RAMPRATE_DEFAULT | DAC_EQBYPASS_DEFAULT)) return false;
 
 	/* Set DAC Volume */
-	if(!ES8311_I2C_write(ES8311_DAC_REG32, DAC_VOL_PERCENT_LEVEL(40) )) return false;
+	if(!ES8311_I2C_write(ES8311_DAC_REG32, DAC_VOL_PERCENT_LEVEL(80) )) return false;
 
 	/* Set ADC Volume */
-	if(!ES8311_I2C_write(ES8311_ADC_REG17, ADC_VOL_PERCENT_LEVEL(75))) return false;
+	if(!ES8311_I2C_write(ES8311_ADC_REG17, ADC_VOL_PERCENT_LEVEL(70))) return false;
 
 	/* Set max PGA Gain for Mic (differential input) and turn DIG_MIC off */
-	if(!ES8311_I2C_write(ES8311_SYSTEM_REG14, LINSEL | PGAGAIN_24DB)) return false;
+	if(!ES8311_I2C_write(ES8311_SYSTEM_REG14, LINSEL | PGAGAIN_15DB)) return false;
 
 	return true;
 }
