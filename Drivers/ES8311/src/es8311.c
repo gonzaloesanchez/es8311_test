@@ -21,7 +21,7 @@
  */
 bool ES8311_init(sampling_options_t sampling)
 {
-	uint8_t chip_read;
+	uint8_t chip_read, aux;
 
 	if (!ES8311_hardware_init(sampling))
 	{
@@ -58,17 +58,24 @@ bool ES8311_init(sampling_options_t sampling)
 	if(!ES8311_I2C_write(ES8311_CLK_MANAGER_REG02, MULT_PRE | DIV_PRE)) return false;
 
 
-	/* register ES8311_CLK_MANAGER_REG03 as default after POR */
-	/* register ES8311_CLK_MANAGER_REG04 as default after POR */
+	/* ADC_FSMODE = 0 (single speed) and OSR = 32 --> OSR = IADC_CLK / LRCK / 8 */
+	if(!ES8311_I2C_write(ES8311_CLK_MANAGER_REG03, 0x20)) return false;
 
-	/* Oversampling as POR defaults on REG03 and REG04 */
+	/* ADC_FSMODE = 0 (single speed) and OSR = 32 --> Just testing, not anywhere */
+	if(!ES8311_I2C_write(ES8311_CLK_MANAGER_REG04, 0x20)) return false;
+
+	/* ADC_SCALE = 0dB --> as User guide shows */
+	if(!ES8311_I2C_read(ES8311_ADC_REG16, &aux)) return false;
+	if(!ES8311_I2C_write(ES8311_ADC_REG16, aux & 0xF8)) return false;
+
+
 
 	/* DIV_CLKADC=0 and DIV_CLKDAC=0 as defaults, but just for reasurement*/
 	if(!ES8311_I2C_write(ES8311_CLK_MANAGER_REG05, DIV_CLKADC | DIV_CLKDAC)) return false;
 
-	/* register ES8311_CLK_MANAGER_REG06 as default after POR */
-	/* register ES8311_CLK_MANAGER_REG07 as default after POR */
-	/* register ES8311_CLK_MANAGER_REG08 as default after POR */
+	/* register ES8311_CLK_MANAGER_REG06 as default after POR - not meaningful in slave mode */
+	/* register ES8311_CLK_MANAGER_REG07 as default after POR - not meaningful in slave mode */
+	/* register ES8311_CLK_MANAGER_REG08 as default after POR - not meaningful in slave mode */
 
 	/**
 	 * REG06, REG07 and REG08 has no use in slave operation as DIV_BCLK and DIV_LRCK are disabled
@@ -87,7 +94,6 @@ bool ES8311_init(sampling_options_t sampling)
 
 	/**
 	 * SDP_IN_FMT (REG09 [1:0]) have a default value (00) so its config as I2S serial audio data format
-	 * Check if Left Justify is needed (01). Not sure about this
 	 *
 	 * Same with SDP_OUT_FMT
 	 *
@@ -103,10 +109,10 @@ bool ES8311_init(sampling_options_t sampling)
 	if(!ES8311_I2C_write(ES8311_DAC_REG37, DAC_RAMPRATE_DEFAULT | DAC_EQBYPASS_DEFAULT)) return false;
 
 	/* Set DAC Volume */
-	if(!ES8311_I2C_write(ES8311_DAC_REG32, DAC_VOL_PERCENT_LEVEL(80) )) return false;
+	if(!ES8311_I2C_write(ES8311_DAC_REG32, DAC_VOL_PERCENT_LEVEL(50) )) return false;
 
 	/* Set ADC Volume */
-	if(!ES8311_I2C_write(ES8311_ADC_REG17, ADC_VOL_PERCENT_LEVEL(70))) return false;
+	if(!ES8311_I2C_write(ES8311_ADC_REG17, ADC_VOL_PERCENT_LEVEL(50))) return false;
 
 	/* Set max PGA Gain for Mic (differential input) and turn DIG_MIC off */
 	if(!ES8311_I2C_write(ES8311_SYSTEM_REG14, LINSEL | PGAGAIN_15DB)) return false;
