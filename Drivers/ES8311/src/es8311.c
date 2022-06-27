@@ -65,8 +65,9 @@ bool ES8311_init(sampling_options_t sampling)
 	if(!ES8311_I2C_write(ES8311_CLK_MANAGER_REG04, 0x20)) return false;
 
 	/* ADC_SCALE = 0dB --> as User guide shows */
-	if(!ES8311_I2C_read(ES8311_ADC_REG16, &aux)) return false;
-	if(!ES8311_I2C_write(ES8311_ADC_REG16, aux & 0xF8)) return false;
+	//if(!ES8311_I2C_read(ES8311_ADC_REG16, &aux)) return false;
+	//if(!ES8311_I2C_write(ES8311_ADC_REG16, aux & 0xF8)) return false;
+	if(!ES8311_I2C_write(ES8311_ADC_REG16, 0x00)) return false;
 
 
 
@@ -82,14 +83,10 @@ bool ES8311_init(sampling_options_t sampling)
 	 */
 
 	/* Setup audio format (fmt): master/slave, resolution, I2S
-	 *
-	 * Beware, example code has a new reset on REG00 with 0xBF value
-	 * Not sure if needed here*/
-//	if(!ES8311_I2C_write(ES8311_RESET_REG00, 0xBF);	//????????
+	 */
 
-
-	/* Setup SDP In and Out resolution 16bits both */
-	if(!ES8311_I2C_write(ES8311_SDPIN_REG09, SDP_IN_WL_16BIT )) return false;
+	/* Setup SDP In and Out resolution 16bits both, left justified */
+	if(!ES8311_I2C_write(ES8311_SDPIN_REG09, SDP_IN_WL_16BIT)) return false;
 	if(!ES8311_I2C_write(ES8311_SDPOUT_REG0A, SDP_OUT_WL_16BIT)) return false;
 
 	/**
@@ -109,13 +106,16 @@ bool ES8311_init(sampling_options_t sampling)
 	if(!ES8311_I2C_write(ES8311_DAC_REG37, DAC_RAMPRATE_DEFAULT | DAC_EQBYPASS_DEFAULT)) return false;
 
 	/* Set DAC Volume */
-	if(!ES8311_I2C_write(ES8311_DAC_REG32, DAC_VOL_PERCENT_LEVEL(50) )) return false;
+	if(!ES8311_I2C_write(ES8311_DAC_REG32, DAC_VOL_PERCENT_LEVEL(95) )) return false;
 
 	/* Set ADC Volume */
-	if(!ES8311_I2C_write(ES8311_ADC_REG17, ADC_VOL_PERCENT_LEVEL(50))) return false;
+	if(!ES8311_I2C_write(ES8311_ADC_REG17, ADC_VOL_PERCENT_LEVEL(45))) return false;
 
 	/* Set max PGA Gain for Mic (differential input) and turn DIG_MIC off */
-	if(!ES8311_I2C_write(ES8311_SYSTEM_REG14, LINSEL | PGAGAIN_15DB)) return false;
+	if(!ES8311_I2C_write(ES8311_SYSTEM_REG14, 0x30 | PGAGAIN_24DB)) return false;
+
+	/* Set ADC + 0 (LEFT Chan + RIGHT Chan) on ADCDAT_SEL */
+	if(!ES8311_I2C_write(ES8311_GPIO_REG44, 0x00)) return false;
 
 	return true;
 }
