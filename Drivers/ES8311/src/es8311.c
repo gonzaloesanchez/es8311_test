@@ -51,11 +51,11 @@ bool ES8311_init(sampling_options_t sampling)
 	if(!ES8311_I2C_write(ES8311_RESET_REG00, CSM_ON)) return false;	//0x80  Power-on command
 
 	/* Setup clock: source BCLK, polarities defaults, ADC and DAC clocks on */
-	if(!ES8311_I2C_write(ES8311_CLK_MANAGER_REG01, MCLK_SEL | BCLK_ON | CLKADC_ON | CLKDAC_ON | ANACLKADC_ON | ANACLKDAC_ON)) return false;
+	if(!ES8311_I2C_write(ES8311_CLK_MANAGER_REG01, MCLK_ON | BCLK_ON | CLKADC_ON | CLKDAC_ON | ANACLKADC_ON | ANACLKDAC_ON)) return false;
 
 	/* Frecuency config with BCLK = 32 * LRCK (automatic from uC frame) => IMCLK = 8 * BCLK
 	 * Simple math ==> IMCLK = (32 * 8 * LRCK) , where LRCK = Sample Rate*/
-	if(!ES8311_I2C_write(ES8311_CLK_MANAGER_REG02, MULT_PRE | DIV_PRE)) return false;
+	if(!ES8311_I2C_write(ES8311_CLK_MANAGER_REG02, 0x00)) return false;
 
 
 	/* ADC_FSMODE = 0 (single speed) and OSR = 32 --> OSR = IADC_CLK / LRCK / 8 */
@@ -109,10 +109,10 @@ bool ES8311_init(sampling_options_t sampling)
 	if(!ES8311_I2C_write(ES8311_DAC_REG32, DAC_VOL_PERCENT_LEVEL(95) )) return false;
 
 	/* Set ADC Volume */
-	if(!ES8311_I2C_write(ES8311_ADC_REG17, ADC_VOL_PERCENT_LEVEL(45))) return false;
+	if(!ES8311_I2C_write(ES8311_ADC_REG17, ADC_VOL_PERCENT_LEVEL(60))) return false;
 
 	/* Set max PGA Gain for Mic (differential input) and turn DIG_MIC off */
-	if(!ES8311_I2C_write(ES8311_SYSTEM_REG14, 0x30 | PGAGAIN_24DB)) return false;
+	if(!ES8311_I2C_write(ES8311_SYSTEM_REG14, 0x30 | PGAGAIN_9DB)) return false;
 
 	/* Set ADC + 0 (LEFT Chan + RIGHT Chan) on ADCDAT_SEL */
 	if(!ES8311_I2C_write(ES8311_GPIO_REG44, 0x00)) return false;
