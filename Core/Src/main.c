@@ -130,7 +130,7 @@ int main(void)
   MX_I2S2_Init();
   /* USER CODE BEGIN 2 */
 
-  if(!ES8311_init(SAMPLING_22K))
+  if(!ES8311_init(SAMPLING_8K))
 	  while(1);
   /**
    * Primera posicion del ping pong buffer
